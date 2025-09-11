@@ -5,11 +5,11 @@ import numpy as np
 from torch.utils.data import DataLoader, TensorDataset, random_split
 import os
 
-# ==== 修改为你的npy路径 ====
+# ==== Modify it to your npy path ====
 X = np.load(r'D:\pycharm project\Rehab-120\Rehab_training\data\X.npy').astype(np.float32)  # shape: (83088, 200, 12)
 y = np.load(r'D:\pycharm project\Rehab-120\Rehab_training\data\y.npy').astype(np.int64)    # shape: (83088,)
 
-# ==== 数据集准备 ====
+# ==== Dataset preparation ====
 X_tensor = torch.tensor(X)
 y_tensor = torch.tensor(y)
 
@@ -25,7 +25,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print("Using device:", device)
 
 
-# ==== 模型定义 ====
+# ==== LSTM ====
 class BiLSTMClassifier(nn.Module):
     def __init__(self, input_size, hidden_size, num_layers, num_classes):
         super(BiLSTMClassifier, self).__init__()
@@ -44,7 +44,7 @@ class BiLSTMClassifier(nn.Module):
         return out
 
 
-# ==== 参数配置 ====
+# ==== parameter ====
 input_size = 12
 hidden_size = 128
 num_layers = 2
@@ -56,7 +56,7 @@ model = BiLSTMClassifier(input_size, hidden_size, num_layers, num_classes).to(de
 criterion = nn.CrossEntropyLoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
 
-# ==== 模型训练 ====
+# ==== train ====
 best_val_acc = 0.0
 best_model_path = r'D:\pycharm project\Rehab-120\Rehab_training\models\best_LSTM_model.pth'
 
@@ -83,17 +83,17 @@ for epoch in range(num_epochs):
         train_preds.extend(preds)
         train_labels.extend(labels)
 
-        # === 每个 batch 打印一次 ===
+        # ===  print  ===
         batch_acc = accuracy_score(labels, preds)
         print(f"[Epoch {epoch + 1}/{num_epochs}] "
               f"Batch {batch_idx + 1}/{len(train_loader)} | "
               f"Loss: {loss.item():.4f} | "
               f"Batch Acc: {batch_acc:.4f}")
 
-    # === 每轮汇总信息 ===
+    # ===  ===
     train_acc = accuracy_score(train_labels, train_preds)
 
-    # 验证阶段
+    # vaildtion
     model.eval()
     val_preds, val_labels = [], []
     with torch.no_grad():
@@ -106,13 +106,13 @@ for epoch in range(num_epochs):
     val_acc = accuracy_score(val_labels, val_preds)
 
     print(f"===> Epoch {epoch + 1} Summary | Train Loss: {train_loss:.4f} | Train Acc: {train_acc:.4f} | Val Acc: {val_acc:.4f}")
-    # 保存验证集准确率更高的模型
+    # save best model
     if val_acc > best_val_acc:
         best_val_acc = val_acc
         torch.save(model.state_dict(), best_model_path)
         print(f"--> [Epoch {epoch + 1}] New best model saved with Val Acc: {val_acc:.4f}")
 
-# ==== 加载最优模型并评估 ====
+# ==== load best model ====
 print("\n=== Evaluating Best Model ===")
 model.load_state_dict(torch.load(best_model_path))
 model.eval()
@@ -136,3 +136,4 @@ print(f"Precision: {precision:.4f}")
 print(f"Recall   : {recall:.4f}")
 print(f"F1 Score : {f1:.4f}")
 print("\nConfusion Matrix:\n", cm)
+
