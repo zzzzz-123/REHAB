@@ -7,11 +7,11 @@ import os
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-# ==== 修改为你的npy路径 ====
+# ==== Modify it to your npy path ====
 X = np.load(r'D:\pycharm project\Rehab-120\Rehab_training\data\X.npy').astype(np.float32)  # shape: (83088, 200, 12)
 y = np.load(r'D:\pycharm project\Rehab-120\Rehab_training\data\y.npy').astype(np.int64)    # shape: (83088,)
 
-# ==== 数据集准备 ====
+# ====Dataset preparation ====
 X_tensor = torch.tensor(X)
 y_tensor = torch.tensor(y)
 
@@ -26,7 +26,7 @@ val_loader = DataLoader(val_dataset, batch_size=128, shuffle=False)
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print("Using device:", device)
 
-# ==== 模型定义 ====
+# ==== GRU ====
 class BiGRUClassifier(nn.Module):
     def __init__(self, input_size, hidden_size, num_layers, num_classes):
         super(BiGRUClassifier, self).__init__()
@@ -43,7 +43,7 @@ class BiGRUClassifier(nn.Module):
         out = self.fc(out[:, -1, :])  # 取最后一个时间步
         return out
 
-# ==== 参数配置 ====
+# ==== parameter ====
 input_size = 12
 hidden_size = 128
 num_layers = 2
@@ -54,7 +54,7 @@ model = BiGRUClassifier(input_size, hidden_size, num_layers, num_classes).to(dev
 criterion = nn.CrossEntropyLoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
 
-# ==== 训练 ====
+# ==== train ====
 best_val_acc = 0.0
 best_model_path = r'D:\pycharm project\Rehab-120\Rehab_training\models\best_GRU_model.pth'
 
@@ -89,7 +89,7 @@ for epoch in range(num_epochs):
 
     train_acc = accuracy_score(train_labels, train_preds)
 
-    # ==== 验证 ====
+    # ====validation ====
     model.eval()
     val_preds, val_labels = [], []
     with torch.no_grad():
@@ -102,13 +102,13 @@ for epoch in range(num_epochs):
     val_acc = accuracy_score(val_labels, val_preds)
     print(f"===> Epoch {epoch + 1} Summary | Train Loss: {train_loss:.4f} | Train Acc: {train_acc:.4f} | Val Acc: {val_acc:.4f}")
 
-    # 保存最优模型
+    # save best model
     if val_acc > best_val_acc:
         best_val_acc = val_acc
         torch.save(model.state_dict(), best_model_path)
         print(f"--> [Epoch {epoch + 1}] New best model saved with Val Acc: {val_acc:.4f}")
 
-# ==== 加载最优模型 & 评估 ====
+# ==== load best model ====
 print("\n=== Evaluating Best Model ===")
 model.load_state_dict(torch.load(best_model_path))
 model.eval()
@@ -134,7 +134,7 @@ print(f"Recall   : {recall:.4f}")
 print(f"F1 Score : {f1:.4f}")
 print("\nConfusion Matrix:\n", cm)
 
-# ==== 绘制混淆矩阵 ====
+# ==== confusion metrix ====
 plt.figure(figsize=(10, 8))
 sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', cbar=True)
 plt.title('Confusion Matrix')
@@ -142,3 +142,4 @@ plt.xlabel('Predicted Label')
 plt.ylabel('True Label')
 plt.tight_layout()
 plt.show()
+
